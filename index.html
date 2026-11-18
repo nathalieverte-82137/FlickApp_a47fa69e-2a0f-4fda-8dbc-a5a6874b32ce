@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <title>FlickApp</title>
+  <style>
+    :root {
+      --bg-color: #e0f7f5;
+      --card-bg: #ffffff;
+      --text-primary: #1a252c;
+      --text-muted: #607274;
+      --primary-btn: #00a896;
+      --primary-btn-active: #008072;
+      --sync-btn: #7209b7;
+      --accent-color: #ff5964;
+      --export-btn: #2ec4b6;
+      --clear-btn: #e63946;
+      --tag-bg: #c4f1ec;
+      --tag-text: #005f56;
+      --duration-bg: #fff3bf;
+      --duration-text: #7f5f00;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-top: 15px;
+      margin-bottom: 15px;
+      color: var(--text-primary);
+      text-align: center;
+    }
+
+    .card {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 350px;
+      padding: 18px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 168, 150, 0.12);
+      margin-bottom: 20px;
+      box-sizing: border-box;
+      border: 1px solid #bcece7;
+    }
+
+    .checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      font-size: 1.1rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      margin-right: 12px;
+      accent-color: var(--accent-color);
+    }
+
+    .activity-icon {
+      margin-right: 6px;
+      font-size: 1.1rem;
+    }
+
+    .date-group,
+    .duration-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+
+    .date-group label,
+    .duration-group label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: bold;
+    }
+
+    input[type="datetime-local"],
+    select {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #bcece7;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-family: inherit;
+      background-color: #fff;
+      color: var(--text-primary);
+      -webkit-appearance: none;
+    }
+
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    button {
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .btn-save {
+      background-color: var(--primary-btn);
+    }
+
+    .btn-save:active {
+      background-color: var(--primary-btn-active);
+    }
+
+    .btn-export {
+      background-color: var(--export-btn);
+    }
+
+    .btn-import {
+      background-color: var(--sync-btn);
+    }
+
+    .btn-clear {
+      background-color: var(--clear-btn);
+    }
+
+    #last-export-info {
+      margin-top: 14px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    #last-export-info strong {
+      display: block;
+      margin-top: 4px;
+    }
+
+    .history-container {
+      width: 100%;
+      max-width: 350px;
+      flex-grow: 1;
+    }
+
+    .history-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .history-item {
+      background: var(--card-bg);
+      padding: 14px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      word-break: break-word;
+      border-left: 4px solid var(--primary-btn);
+    }
+
+    .timestamp {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .activity-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      background-color: var(--tag-bg);
+      color: var(--tag-text);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .duration-tag {
+      background-color: var(--duration-bg);
+      color: var(--duration-text);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>FlickApp <div id="app-version" style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 4px;">Versie 1.0</div></h1>
+
+  <div class="card">
+    <div class="checklist">
+      <label class="checkbox-label">
+        <input type="checkbox" name="activity" value="Longeren">
+        <span class="activity-icon">🔄</span> Longeren
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" name="activity" value="Rijden">
+        <span class="activity-icon">🏇</span> Rijden
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" name="activity" value="Grondwerk">
+        <span class="activity-icon">👣</span> Grondwerk
+      </label>
+    </div>
+
+    <div class="date-group">
+      <label for="datetime-picker">Date & Time:</label>
+      <input type="datetime-local" id="datetime-picker" />
+    </div>
+
+    <div class="duration-group">
+      <label for="duration-select">Duration:</label>
+      <select id="duration-select">
+        <option value="5">5 min</option>
+        <option value="10">10 min</option>
+        <option value="15">15 min</option>
+        <option value="20" selected>20 min</option>
+        <option value="25">25 min</option>
+        <option value="30">30 min</option>
+        <option value="35">35 min</option>
+        <option value="40">40 min</option>
+        <option value="45">45 min</option>
+        <option value="50">50 min</option>
+        <option value="55">55 min</option>
+        <option value="60">60 min (1 hr)</option>
+        <option value="75">75 min (1 hr 15m)</option>
+        <option value="90">90 min (1 hr 30m)</option>
+        <option value="120">120 min (2 hrs)</option>
+        <option value=">120">> 2 hrs</option>
+      </select>
+    </div>
+
+    <div class="button-group">
+      <button id="save-btn" class="btn-save">Log Activity</button>
+      <button id="export-btn" class="btn-export">Export History</button>
+      <button id="import-btn" class="btn-import">Import Backup</button>
+      <input type="file" id="import-file-input" accept=".json,application/json" style="display: none;" />
+      <button id="clear-btn" class="btn-clear">Clear History</button>
+    </div>
+    <div id="last-export-info"></div>
+  </div>
+
+  <div class="history-container">
+    <ul id="history-list" class="history-list"></ul>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const saveButton = document.getElementById("save-btn");
+      const exportButton = document.getElementById("export-btn");
+      const importButton = document.getElementById("import-btn");
+      const importFileInput = document.getElementById("import-file-input");
+      const clearButton = document.getElementById("clear-btn");
+      const historyList = document.getElementById("history-list");
+      const checkboxes = document.querySelectorAll('input[name="activity"]');
+      const datetimePicker = document.getElementById("datetime-picker");
+      const durationSelect = document.getElementById("duration-select");  
+      const lastExportInfo = document.getElementById("last-export-info");
+
+      function getActivityIcon(activityName) {
+        switch (activityName) {
+          case "Longeren": return "🔄";
+          case "Rijden": return "🏇";
+          case "Grondwerk": return "👣";
+          default: return "📌";
+        }
+      }
+
+      function resetToDefaults() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        const isoString = now.toISOString().slice(0, 16);
+        
+        datetimePicker.value = isoString;
+        datetimePicker.max = isoString;
+        durationSelect.value = "20";
+      }
+
+      function getHistory() {
+        const rawData = localStorage.getItem("activityHistory");
+        return rawData ? JSON.parse(rawData) : [];
+      }
+
+      function formatDurationText(val) {
+        if (!val) return null;
+        if (val === ">120") return "> 2 hrs";
+        
+        const minutes = parseInt(val, 10);
+        if (isNaN(minutes)) return val;
+        if (minutes < 60) return `${minutes} min`;
+
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        const hrText = hours === 1 ? "1 hr" : `${hours} hrs`;
+        
+        return mins > 0 ? `${hrText} ${mins}m` : hrText;
+      }
+
+      function renderHistory() {
+        const history = getHistory();
+        historyList.innerHTML = "";
+
+        if (history.length === 0) {
+          historyList.innerHTML = `<li class="history-item" style="color:var(--text-muted); text-align:center;">No activities logged yet.</li>`;
+        } else {
+          history.sort((a, b) => new Date(b.rawTimestamp) - new Date(a.rawTimestamp));
+
+          history.forEach((entry) => {
+            const li = document.createElement("li");
+            li.className = "history-item";
+            
+            const timeDiv = document.createElement("div");
+            timeDiv.className = "timestamp";
+            timeDiv.innerText = entry.timestamp;
+
+            const tagsDiv = document.createElement("div");
+            tagsDiv.className = "activity-tags";
+
+            entry.activities.forEach((act) => {
+              const tag = document.createElement("span");
+              tag.className = "tag";
+              tag.innerText = `${getActivityIcon(act)} ${act}`;
+              tagsDiv.appendChild(tag);
+            });
+
+            if (entry.duration) {
+              const durationTag = document.createElement("span");
+              durationTag.className = "tag duration-tag";
+              durationTag.innerText = `⏱ ${formatDurationText(entry.duration)}`;
+              tagsDiv.appendChild(durationTag);
+            }
+
+            li.appendChild(timeDiv);
+            li.appendChild(tagsDiv);
+            historyList.appendChild(li);
+          });
+        }
+        renderLastExportDate();
+      }
+
+      saveButton.addEventListener("click", () => {
+        const selectedActivities = [];
+        checkboxes.forEach((cb) => {
+          if (cb.checked) {
+            selectedActivities.push(cb.value);
+          }
+        });
+
+        if (selectedActivities.length === 0) {
+          alert("Please select at least one activity.");
+          return;
+        }
+
+        if (!datetimePicker.value) {
+          alert("Please select a valid date and time.");
+          return;
+        }
+
+        const selectedDate = new Date(datetimePicker.value);
+        const now = new Date();
+
+        if (selectedDate > now) {
+          alert("You cannot log an activity with a future date or time.");
+          return;
+        }
+
+        const durationVal = durationSelect.value;
+
+        const history = getHistory();
+        const newEntry = {
+          activities: selectedActivities,
+          duration: durationVal,
+          timestamp: selectedDate.toLocaleString(),
+          rawTimestamp: selectedDate.toISOString()
+        };
+
+        history.push(newEntry);
+        localStorage.setItem("activityHistory", JSON.stringify(history));
+
+        checkboxes.forEach((cb) => (cb.checked = false));
+        resetToDefaults();
+        renderHistory();
+      });
+
+      exportButton.addEventListener("click", () => {
+        const history = getHistory();
+        if (history.length === 0) {
+          alert("No history to export.");
+          return;
+        }
+
+        const dataStr = JSON.stringify(history, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const file = new File([blob], "activity_history_backup.json", { type: "application/json" });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({
+            title: "Activity History Backup",
+            files: [file]
+          }).catch((err) => console.log("Share cancelled:", err));
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "activity_history_backup.json";
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+
+        localStorage.setItem("lastExportDate", new Date().toISOString());
+        renderLastExportDate();
+      });
+
+      importButton.addEventListener("click", () => {
+        importFileInput.click();
+      });
+
+      importFileInput.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const importedData = JSON.parse(e.target.result);
+            if (Array.isArray(importedData)) {
+              localStorage.setItem("activityHistory", JSON.stringify(importedData));
+              renderHistory();
+              alert("Back-up succesvol geïmporteerd!");
+            } else {
+              alert("Ongeldig back-up bestand.");
+            }
+          } catch (err) {
+            alert("Fout bij het lezen van het JSON-bestand.");
+          }
+          importFileInput.value = "";
+        };
+        reader.readAsText(file);
+      });
+
+      clearButton.addEventListener("click", () => {
+        if (confirm("Are you sure you want to clear all logged activities?")) {
+          localStorage.removeItem("activityHistory");
+          localStorage.removeItem("lastExportDate");
+          renderHistory();
+        }
+      });
+      
+      function renderLastExportDate() {
+        const lastExport = localStorage.getItem("lastExportDate");
+        if (lastExport) {
+          const exportDate = new Date(lastExport);
+          const now = new Date();
+          const diffTime = Math.abs(now - exportDate);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+          
+          const formattedDate = exportDate.toLocaleDateString('nl-NL');
+          
+          if (diffDays > 30) {
+            lastExportInfo.innerHTML = `Laatste export: ${formattedDate} <br><strong style="color: var(--clear-btn);">⚠️ Herinnering: Je laatste export is meer dan een maand geleden!</strong>`;
+          } else {
+            lastExportInfo.innerText = `Laatste export: ${formattedDate}`;
+          }
+        } else {
+          lastExportInfo.innerHTML = `Laatste export: Nog niet geëxporteerd <br><strong style="color: var(--clear-btn);">⚠️ Vergeet niet een back-up te maken!</strong>`;
+        }
+      }
+
+      function onStart() {
+        resetToDefaults();
+        renderHistory();
+      }
+      
+      onStart();
+    });
+  </script>
+</body>
+</html>
